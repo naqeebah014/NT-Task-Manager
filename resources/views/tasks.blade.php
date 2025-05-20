@@ -30,7 +30,7 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container">
-            <a class="navbar-brand" href="#">Task Manager</a>
+            <a class="navbar-brand" href="{{ route('tasks.index') }}">Task Manager</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -143,7 +143,7 @@
                                     <p class="card-text">{{ $task->description }}</p>
                                     <div class="task-details">
                                         <p><strong>Category:</strong> {{ $task->category }}</p>
-                                        <p><strong>Deadline:</strong> {{ $task->deadline->format('m/d/Y') }}</p>
+                                        <p><strong>Deadline:</strong> {{ \Carbon\Carbon::parse($task->deadline)->format('m/d/Y') }}</p>
                                         <p><strong>Assigned to:</strong> {{ $task->assignedTo->name }}</p>
                                         <span class="status-badge status-{{ $task->status }}">{{ $task->status }}</span>
                                     </div>
@@ -209,65 +209,3 @@
         @endauth
     </div>
 @endsection
-
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize login modal
-            const loginBtn = document.getElementById('loginBtn');
-            if (loginBtn) {
-                loginBtn.addEventListener('click', () => {
-                    const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-                    loginModal.show();
-                });
-            }
-
-            // Filter tasks
-            const statusFilter = document.getElementById('statusFilter');
-            if (statusFilter) {
-                statusFilter.addEventListener('change', filterTasks);
-            }
-
-            function filterTasks() {
-                const status = statusFilter.value;
-                const taskCards = document.querySelectorAll('.task-card');
-
-                taskCards.forEach(card => {
-                    const cardStatus = card.querySelector('.status-badge').textContent.toLowerCase();
-                    if (status === '' || cardStatus === status) {
-                        card.closest('.col-md-4').style.display = 'block';
-                    } else {
-                        card.closest('.col-md-4').style.display = 'none';
-                    }
-                });
-            }
-
-            // Update task status
-            window.updateTaskStatus = function(taskId, newStatus) {
-                fetch(`/tasks/${taskId}/status`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({ status: newStatus })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const statusBadge = document.querySelector(`.task-card [onchange*="${taskId}"]`).closest('.card-body').querySelector('.status-badge');
-                        statusBadge.className = `status-badge status-${newStatus}`;
-                        statusBadge.textContent = newStatus;
-                        alert('Task status updated successfully!');
-                    }
-                });
-            };
-
-            // Edit task
-            window.editTask = function(taskId) {
-                // In a real implementation, you would fetch the task data and populate a form
-                alert(`Editing task ${taskId} - this would open an edit form in a real implementation`);
-            };
-        });
-    </script>
-@endpush
